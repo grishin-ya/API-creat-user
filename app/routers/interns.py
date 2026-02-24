@@ -1,8 +1,6 @@
 from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_admin
 from app.core.security import get_password_hash

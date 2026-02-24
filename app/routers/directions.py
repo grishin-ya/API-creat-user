@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 from app.core.database import get_db
 from app.core.deps import require_admin
 from app.models.direction import Direction
@@ -47,7 +46,6 @@ def delete_direction(direction_id: int, db: Session = Depends(get_db)):
     direction = db.get(Direction, direction_id)
     if not direction:
         raise HTTPException(status_code=404, detail="Direction not found")
-    # Проверяем, используется ли направление
     if db.query(User).filter(User.direction_id == direction_id).first():
         raise HTTPException(status_code=400, detail="Direction is used by organization users")
     if db.query(InternApplication).filter(InternApplication.specialization_id == direction_id).first():
