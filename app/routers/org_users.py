@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 from app.core.database import get_db
 from app.core.deps import require_admin
 from app.core.security import get_password_hash
@@ -53,7 +52,6 @@ def update_org_user(
     if not user or user.user_type != UserType.organization:
         raise HTTPException(status_code=404, detail="Organization user not found")
 
-    # Проверка уникальности логина/email
     if payload.login and payload.login != user.login:
         if db.query(User).filter(User.login == payload.login).first():
             raise HTTPException(status_code=400, detail="Login already exists")
@@ -61,7 +59,6 @@ def update_org_user(
         if db.query(User).filter(User.email == payload.email).first():
             raise HTTPException(status_code=400, detail="Email already exists")
 
-    # Обновление полей
     if payload.first_name is not None:
         user.first_name = payload.first_name
     if payload.last_name is not None:
@@ -106,7 +103,6 @@ def delete_org_user(
     if not user or user.user_type != UserType.organization:
         raise HTTPException(status_code=404, detail="Organization user not found")
 
-    # Проверка, не является ли пользователь ментором
     mentor_of = db.query(InternProfile).filter(InternProfile.mentor_id == user_id).first()
     if mentor_of:
         raise HTTPException(

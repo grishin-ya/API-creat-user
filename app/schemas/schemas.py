@@ -1,13 +1,10 @@
 from datetime import date, datetime
 import re
 from typing import Optional
-
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-
 from app.models.enums import EnglishLevel, InternshipStatus, OrgRole
 from app.schemas.direction import DirectionOut
 
-# Регулярные выражения для валидации
 NAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё\-\s]{2,50}$")
 TG_RE = re.compile(r"^@?[a-zA-Z][a-zA-Z0-9_]{3,30}[a-zA-Z0-9]$")
 PHONE_RE = re.compile(r"^\+[0-9]{6,14}$")

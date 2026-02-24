@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.security import get_password_hash
@@ -16,10 +15,9 @@ from app.routers.org_users import router as org_users_router
 
 app = FastAPI(title=settings.app_name)
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Замените на конкретные домены в продакшене
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,14 +30,12 @@ def on_startup():
 
     db = Session(bind=engine)
 
-    # Создание направлений по умолчанию
     default_directions = ["Python", "Angular", "React"]
     for name in default_directions:
         if not db.query(Direction).filter(Direction.name == name).first():
             db.add(Direction(name=name))
     db.commit()
 
-    # Создание администратора
     admin = db.query(User).filter(User.login == settings.first_admin_login).first()
     if not admin:
         db.add(
