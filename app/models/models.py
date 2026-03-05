@@ -1,6 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.core.database import Base
 from app.models.enums import EnglishLevel, InternshipStatus, OrgRole, UserType
 from app.models.direction import Direction
@@ -21,6 +22,7 @@ class User(Base):
     org_role: Mapped[OrgRole | None] = mapped_column(Enum(OrgRole), nullable=True)
     direction_id: Mapped[int | None] = mapped_column(ForeignKey("directions.id"), nullable=True)
     direction: Mapped[Direction | None] = relationship()
+    mentor_of = relationship("Intern", back_populates="mentor", foreign_keys="Intern.mentor_id")
 
 
 class InternApplication(Base):
@@ -39,21 +41,22 @@ class InternApplication(Base):
     education: Mapped[str | None] = mapped_column(Text, nullable=True)
     about: Mapped[str | None] = mapped_column(Text, nullable=True)
     specialization_id: Mapped[int] = mapped_column(ForeignKey("directions.id"), nullable=False)
-    specialization: Mapped[Direction] = relationship()
     english_level: Mapped[EnglishLevel] = mapped_column(Enum(EnglishLevel))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    specialization: Mapped[Direction] = relationship()
+    intern = relationship("Intern", back_populates="application", uselist=False)
 
 
-class InternProfile(Base):
-    __tablename__ = "intern_profiles"
+class Intern(Base):
+    __tablename__ = "interns"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     application_id: Mapped[int] = mapped_column(ForeignKey("intern_applications.id"), unique=True)
-    role: Mapped[str | None] = mapped_column(String(50), nullable=True, default=None)
     mentor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     status: Mapped[InternshipStatus] = mapped_column(Enum(InternshipStatus), default=InternshipStatus.pending)
     internship_start_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     internship_end_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped[User] = relationship(foreign_keys=[user_id])
+    application: Mapped[InternApplication] = relationship(back_populates="intern")
+    mentor: Mapped[User | None] = relationship(back_populates="mentor_of")

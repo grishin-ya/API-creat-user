@@ -9,6 +9,7 @@ from app.models.models import User
 
 security = HTTPBearer()
 
+
 def get_current_user(
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -18,19 +19,21 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    token = credentials.credentials
+    
     try:
+        token = credentials.credentials
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        login: str | None = payload.get("sub")
+        login: str = payload.get("sub")
         if login is None:
             raise credentials_exception
-    except JWTError as exc:
-        raise credentials_exception from exc
+    except JWTError:
+        raise credentials_exception
 
     user = db.query(User).filter(User.login == login).first()
-    if not user:
+    if user is None:
         raise credentials_exception
     return user
+
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_admin:
